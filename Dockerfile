@@ -1,46 +1,44 @@
-FROM ubuntu:16.04
+FROM ubuntu:18.04
 
-WORKDIR /tmp/
+LABEL maintainer="aleksanderhan@gmail.com"
+LABEL version="1.0"
+LABEL description="Docker base image for amd gpu"
 
-COPY ./requirements-amd.txt .
-ADD ./amdgpu-pro-17.40-492261.tar.xz .
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get -qq update && \
-    apt-get -qq install --assume-yes \
-    	git \
-    	pciutils \
-    	#apt-utils\
-    	wget \
-        build-essential \                     
-        cmake \
-        libboost-all-dev \
-        python3 \
-        python3-wheel \
-        python3-dev \
-        python3-h5py \
-        python3-yaml \
-        python3-pydot \
-        python3-setuptools \
-        python3-pip #&& \
-    #apt-get clean && \
-    #rm -rf /var/lib/apt/lists/*
+RUN apt update && apt upgrade -y && apt install -y \
+    apt-utils \
+    clinfo \
+    curl \
+    build-essential \
+    dkms \
+    python3-pip;
 
-#RUN wget --referer=https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-16.40-348864.tar.xz \
-#	https://www2.ati.com/drivers/linux/ubuntu/amdgpu-pro-16.40-348864.tar.xz
+RUN mkdir -p /tmp/opencl-driver-amd
+WORKDIR /tmp/opencl-driver-amd
 
-	
-RUN tar -Jxvf amdgpu-pro-17.40-492261.tar.xz && \
-	#dpkg --add-architecture i386 && \
-	./amdgpu-pro-17.40-492261/amdgpu-pro-install -y
+ARG AMD_DRIVER=amdgpu-pro-20.40-1147287-ubuntu-18.04
+ARG FILE_EXT=.tar.xz
+ARG AMD_DRIVER_URL=https://drivers.amd.com/drivers/linux
 
-RUN wget -qO - http://repo.radeon.com/rocm/apt/debian/rocm.gpg.key | apt-key add - && \
-	sh -c 'echo deb [arch=amd64] http://repo.radeon.com/rocm/apt/debian/ xenial main > /etc/apt/sources.list.d/rocm.list'
+RUN curl --referer $AMD_DRIVER_URL -O $AMD_DRIVER_URL/$AMD_DRIVER$FILE_EXT
 
-RUN mkdir /etc/udev/rules.d && \
-	apt-get -qq update && \
-	apt-get -qq install --assume-yes --no-install-recommends \
-		libnuma-dev \
-		rocm-dkms \
-		rocm-opencl-dev
+RUN dpkg --add-architecture i386
+RUN apt update -y
+RUN apt install -y libc6:i386 libstdc++6:i386
 
-#RUN pip3 --no-cache-dir install -r ./requirements-amd.txt
+
+RUN tar -Jxvf $AMD_DRIVER$FILE_EXT
+RUN apt install -y mesa-opencl-icd
+RUN ./$AMD_DRIVER/amdgpu-install -y --headless --opencl=pal,legacy 
+
+
+WORKDIR ~/
+COPY ./requirements.txt .
+COPY ./script.py .
+
+RUN pip3 install -r ./requirements.txt
+
+CMD ["script.py"]
+ENTRYPOINT ["python3"]
+
