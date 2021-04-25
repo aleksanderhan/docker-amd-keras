@@ -23,19 +23,18 @@ ARG AMD_DRIVER_URL=https://drivers.amd.com/drivers/linux
 
 RUN curl --referer $AMD_DRIVER_URL -O $AMD_DRIVER_URL/$AMD_DRIVER$FILE_EXT
 
-RUN dpkg --add-architecture i386
 RUN apt update -y
-RUN apt install -y libc6:i386 libstdc++6:i386
-
+RUN apt install -y libc6:amd64 libstdc++6:amd64
 
 RUN tar -Jxvf $AMD_DRIVER$FILE_EXT
 RUN apt install -y mesa-opencl-icd
 RUN ./$AMD_DRIVER/amdgpu-install -y --headless --opencl=pal,legacy 
 
-
 WORKDIR ~/
 COPY ./requirements.txt .
 COPY ./script.py .
+
+RUN python3 -m pip install pip==21.0.1
 
 RUN pip3 install -r ./requirements.txt
 

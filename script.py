@@ -1,6 +1,5 @@
 import os
-import plaidml.keras
-plaidml.keras.install_backend()
+os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 import keras
 
 print('Hello world!')
