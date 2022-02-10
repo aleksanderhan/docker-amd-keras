@@ -1,4 +1,4 @@
 Keras==2.2.4
-tensorflow==2.4.1
+tensorflow==2.5.3
 plaidml==0.7.0
 plaidml-keras==0.7.0
