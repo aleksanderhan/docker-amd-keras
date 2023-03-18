@@ -28,7 +28,7 @@ RUN apt install -y libc6:amd64 libstdc++6:amd64
 
 RUN tar -Jxvf $AMD_DRIVER$FILE_EXT
 RUN apt install -y mesa-opencl-icd
-RUN ./$AMD_DRIVER/amdgpu-install -y --headless --opencl=pal,legacy 
+RUN ./$AMD_DRIVER/amdgpu-install -y --headless --opencl=pal,legacy --no-dkms
 
 WORKDIR ~/
 COPY ./requirements.txt .
